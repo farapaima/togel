@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Generator Pengeluaran & Shio</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+    .container {
+      background: #222;
+      padding: 20px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 500px;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #00c896;
+      color: white;
+      cursor: pointer;
+    }
+    .output-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 6px;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Lim Hok Ciu Best Father</h2>
+    <label>Pilih Pasaran:</label>
+    <select id="pasaran">
+  <option value="CAMBODIA">Cambodia</option>
+  <option value="MYANMAR">Myanmar</option>
+  <option value="SYDNEY">Sydney</option>
+  <option value="CHINA">China</option>
+  <option value="JAPAN">Japan</option>
+  <option value="SINGAPORE">Singapore</option>
+  <option value="GRABPOOLS">Grabpools</option>
+  <option value="MONGOLIA">Mongolia</option>
+  <option value="TAIWAN">Taiwan</option>
+  <option value="NUSANTARA">Nusantara</option>
+  <option value="HONGKONG">Hongkong</option>
+   </select>
+
+    <label>Masukkan Result (angka):</label>
+<input type="text" id="result" placeholder="isi ni ya ngentot" maxlength="6">
+    <button onclick="generate()">Generate</button>
+
+    <div class="output-box" id="output"></div>
+ <div id="pasaran-image" style="margin-top: 30px; text-align: center;">
+  <img id="pasaran-img" src="" alt="Pasaran Image" style="max-width: 100%; border-radius: 10px; display: none;">
+</div>
+  </div>
+
+<script>
+  const shioMap = {
+    "Ular": [1, 13, 25, 37, 49, 61, 73, 85, 97],
+    "Naga": [2, 14, 26, 38, 50, 62, 74, 86, 98],
+    "Kelinci": [3, 15, 27, 39, 51, 63, 75, 87, 99],
+    "Harimau": [4, 16, 28, 40, 52, 64, 76, 88, 0],
+    "Kerbau": [5, 17, 29, 41, 53, 65, 77, 89],
+    "Tikus": [6, 18, 30, 42, 54, 66, 78, 90],
+    "Babi": [7, 19, 31, 43, 55, 67, 79, 91],
+    "Anjing": [8, 20, 32, 44, 56, 68, 80, 92],
+    "Ayam": [9, 21, 33, 45, 57, 69, 81, 93],
+    "Monyet": [10, 22, 34, 46, 58, 70, 82, 94],
+    "Kambing": [11, 23, 35, 47, 59, 71, 83, 95],
+    "Kuda": [12, 24, 36, 48, 60, 72, 84, 96]
+  };
+
+  const pasaranLinks = {
+    "CAMBODIA": "www(.)magnumcambodia(.)com",
+    "MYANMAR": "www(.)myanmarresult(.)com",
+    "SYDNEY": "www(.)sydneypoolstoday(.)com",
+    "CHINA": "www(.)chinapools(.)asia",
+    "JAPAN": "www(.)japanpools(.)online",
+    "SINGAPORE": "www(.)singaporepools(.)com(.)sg",
+    "GRABPOOLS": "www(.)grabpools(.)com",
+    "MONGOLIA": "www(.)mongoliawinner(.)com",
+    "TAIWAN": "www(.)taiwan-lotto(.)com",
+    "NUSANTARA": "www(.)nsantarapools(.)com",
+    "HONGKONG": "www(.)hongkongpools(.)com"
+  };
+
+ const pasaranImages = {
+  "CAMBODIA": "images/cambodia.jpg",
+  "MYANMAR": "images/myanmar.jpg",
+  "SYDNEY": "images/sydney.jpg",
+  "CHINA": "images/china.jpg",
+  "JAPAN": "images/japan.jpg",
+  "SINGAPORE": "images/singapore.jpg",
+  "GRABPOOLS": "images/grabpools.jpg",
+  "MONGOLIA": "images/mongolia.jpg",
+  "TAIWAN": "images/taiwan.jpg",
+  "NUSANTARA": "images/nusantara.jpg",
+  "HONGKONG": "images/hongkong.jpg"
+};
+
+  // Pasaran schedule in WIB (UTC+7), in minutes since midnight
+  const schedule = [
+    { time: "11:30", pasaran: "CAMBODIA" },
+    { time: "12:25", pasaran: "MYANMAR" },
+    { time: "13:30", pasaran: "SYDNEY" },
+    { time: "15:10", pasaran: "CHINA" },
+    { time: "17:00", pasaran: "JAPAN" },
+    { time: "17:30", pasaran: "SINGAPORE" },
+    { time: "18:30", pasaran: "GRABPOOLS" },
+    { time: "19:05", pasaran: "MONGOLIA" },
+    { time: "20:25", pasaran: "TAIWAN" },
+    { time: "22:00", pasaran: "NUSANTARA" },
+    { time: "22:40", pasaran: "HONGKONG" }
+  ];
+
+  function getShio(last2Digits) {
+    let num = parseInt(last2Digits);
+    if (num === 0) num = 0;
+    for (const [shio, nums] of Object.entries(shioMap)) {
+      if (nums.includes(num)) {
+        return shio;
+      }
+    }
+    return "Tidak Diketahui";
+  }
+
+ function autoSelectPasaran() {
+  const now = new Date();
+  const utcHours = now.getUTCHours();
+  const utcMinutes = now.getUTCMinutes();
+  const wibMinutes = (utcHours + 7) * 60 + utcMinutes;
+
+  let selected = "";
+
+  for (let i = 0; i < schedule.length; i++) {
+    const [h, m] = schedule[i].time.split(":").map(Number);
+    const scheduledMinutes = h * 60 + m;
+    if (wibMinutes >= scheduledMinutes) {
+      selected = schedule[i].pasaran;
+    } else {
+      break;
+    }
+  }
+
+  if (selected) {
+    const pasaranSelect = document.getElementById("pasaran");
+    for (let i = 0; i < pasaranSelect.options.length; i++) {
+      if (pasaranSelect.options[i].value === selected) {
+        pasaranSelect.selectedIndex = i;
+        break;
+      }
+    }
+
+    // Update image
+    const imgElement = document.getElementById("pasaran-img");
+    const imgUrl = pasaranImages[selected];
+    if (imgUrl) {
+      imgElement.src = imgUrl;
+      imgElement.style.display = "block";
+    } else {
+      imgElement.style.display = "none";
+    }
+  }
+}
+
+  function generate() {
+    const pasaran = document.getElementById("pasaran").value;
+    const result = document.getElementById("result").value.trim();
+    const output = document.getElementById("output");
+
+    if (!pasaran || result.length < 2 || isNaN(result)) {
+      output.innerText = "⚠️ Masukkan pasaran dan angka minimal 2 digit (max 6 digit) yang valid.";
+      return;
+    }
+
+    const last2 = result.slice(-2);
+    const shio = getShio(last2);
+    const domain = pasaranLinks[pasaran.toUpperCase()] || "www(.)example(.)com";
+
+    output.innerText = `Hasil Live ${pasaran.toUpperCase()} pada hari ini adalah :\n\nNomor : ${result}\nShio : ${shio}\n\nLink Resmi ${pasaran.toUpperCase()} : ${domain}\nJika anda kesulitan akses, bisa gunakan VPN berikut\n* WARP 1.1.1.1\n\nSelamat kepada para pemenang, Salam Jackpot !\n#result${pasaran.toLowerCase()}`;
+  }
+
+  window.onload = function () {
+    autoSelectPasaran();
+  };
+</script>
+</body>
+</html>
